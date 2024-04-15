@@ -5,11 +5,12 @@ import { createFolderIfNotExists } from "./folder.js";
 
 createFolderIfNotExists("./images");
 
-const input = JSON.parse(fs.readFileSync("./input.json"));
+const input = JSON.parse(await fs.promises.readFile("./input.json"));
 
 const result = [];
-
-for (const id of input) {
+for (let i = 0; i < input.length; i++) {
+  const id = input[i];
+  console.log(`${i}. ${id}`);
   try {
     const data = await inst(id);
     await downloadImage(data.image, `./images/${id}.jpg`);
@@ -20,11 +21,6 @@ for (const id of input) {
 }
 
 const jsonData = JSON.stringify(result);
-const filePath = "./output.json";
-fs.writeFile(filePath, jsonData, (err) => {
-  if (err) {
-    console.error("Error writing JSON to file:", err);
-    return;
-  }
-  console.log("JSON data has been written to", filePath);
-});
+const filePath = `./output_${new Date().getTime()}.json`;
+await fs.promises.writeFile(filePath, jsonData);
+console.log("JSON data has been written to", filePath);

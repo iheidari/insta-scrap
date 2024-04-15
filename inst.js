@@ -70,7 +70,9 @@ export const inst = async (id) => {
     (element) => element.innerText
   );
 
+  const bio = await page.$eval("header~div h1", (element) => element.innerText);
+
   await browser.close();
 
-  return { id, title, post, followers, following, image };
+  return { id, title, bio, post, followers, following, image };
 };

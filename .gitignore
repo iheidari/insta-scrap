@@ -3,3 +3,4 @@ node_modules
 input.json
 output.json
 images
+output_*
