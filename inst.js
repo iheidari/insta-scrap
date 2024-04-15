@@ -2,30 +2,21 @@ import puppeteer from "puppeteer";
 
 export const inst = async (id) => {
   // Launch the browser and open a new blank page
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [`--window-size=500,800`],
+  });
 
   const page = await browser.newPage();
 
+  // need this to see the mobile view
+  await page.setViewport({ width: 500, height: 800 });
   // Navigate the page to a URL
   await page.goto(`https://www.instagram.com/${id}/`);
 
-  // Set screen size
-  await page.setViewport({ width: 1080, height: 1024 });
-
-  // Type into search box
-  //   await page.type(".devsite-search-field", "automate beyond recorder");
-
   await page.waitForNetworkIdle();
 
-  //   const folowersData = await page.$$eval("._ac2a", (element) =>
-  //     element.map((e) => e.textContent)
-  //   );
-  //   // Print the full title
-  //   console.log("Posts:", folowersData[0]);
-  //   console.log("Flowers:", folowersData[1]);
-  //   console.log("Folowing:", folowersData[2]);
-
-  const filteredElements = await page.$$eval("*", (elements) =>
+  let filteredElements = await page.$$eval("*", (elements) =>
     elements
       .filter(
         (element) =>
@@ -37,13 +28,49 @@ export const inst = async (id) => {
   );
   let post = "";
   if (filteredElements.length > 0) {
-    post = filteredElements[0].replace(" posts", "");
+    post = filteredElements[0].replace("posts", "").trim();
   }
-  const image = await page.$eval("[alt='Profile photo']", (element) =>
+
+  filteredElements = await page.$$eval("*", (elements) =>
+    elements
+      .filter(
+        (element) =>
+          element.tagName === "LI" &&
+          element.innerText &&
+          element.innerText.includes("followers")
+      )
+      .map((element) => element.innerText)
+  );
+  let followers = "";
+  if (filteredElements.length > 0) {
+    followers = filteredElements[0].replace("followers", "").trim();
+  }
+
+  filteredElements = await page.$$eval("*", (elements) =>
+    elements
+      .filter(
+        (element) =>
+          element.tagName === "LI" &&
+          element.innerText &&
+          element.innerText.includes("following")
+      )
+      .map((element) => element.innerText)
+  );
+  let following = "";
+  if (filteredElements.length > 0) {
+    following = filteredElements[0].replace("following", "").trim();
+  }
+
+  const image = await page.$eval("header img", (element) =>
     element.getAttribute("src")
+  );
+
+  const title = await page.$eval(
+    "header~div div",
+    (element) => element.innerText
   );
 
   await browser.close();
 
-  return { post, image };
+  return { id, title, post, followers, following, image };
 };
